@@ -52,7 +52,7 @@ ADMIN_EMAIL="admin@impelement.com"
 ## https://www.odoo.com/documentation/16.0/administration/install.html
 
 # Check if the operating system is Ubuntu 22.04
-if [[ $(lsb_release -r -s) == "22.04" ] || [ $(lsb_release -r -s) == "23.04" ]]; then
+if [[ $(lsb_release -r -s) == "22.04" ]] || [[ $(lsb_release -r -s) == "23.04" ]]; then
     WKHTMLTOX_X64="https://packages.ubuntu.com/jammy/wkhtmltopdf"
     WKHTMLTOX_X32="https://packages.ubuntu.com/jammy/wkhtmltopdf"
     #No Same link works for both 64 and 32-bit on Ubuntu 22.04
@@ -110,7 +110,7 @@ if [ $INSTALL_WKHTMLTOPDF = "True" ]; then
   sudo wget $_url
 
 
-  if [[ $(lsb_release -r -s) == "22.04" ] || [ $(lsb_release -r -s) == "23.04" ]]; then
+  if [[ $(lsb_release -r -s) == "22.04" ]] || [[ $(lsb_release -r -s) == "23.04" ]]; then
     # Ubuntu 22.04 LTS
     sudo apt install wkhtmltopdf -y
   else
