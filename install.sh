@@ -28,7 +28,7 @@ OE_VERSION="16.0"
 # Set this to True if you want to install the Odoo enterprise version!
 IS_ENTERPRISE="False"
 # Installs postgreSQL V14 instead of defaults (e.g V12 for Ubuntu 20/22) - this improves performance
-INSTALL_POSTGRESQL_FOURTEEN="True"
+INSTALL_POSTGRESQL_FOURTEEN="False"
 # Set this to True if you want to install Nginx!
 INSTALL_NGINX="True"
 # Set the superadmin password - if GENERATE_RANDOM_PASSWORD is set to "True" we will automatically generate a random password, otherwise we use this one
@@ -98,10 +98,7 @@ sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
 #--------------------------------------------------
 echo -e "\n--- Installing Python 3 + pip3 --"
 sudo apt-get install python3 python3-pip
-sudo apt-get install git python3-cffi build-essential wget python3-dev python3-venv python3-wheel libxslt-dev libzip-dev libldap2-dev libsasl2-dev python3-setuptools node-less libpng-dev libjpeg-dev gdebi -y
-
-echo -e "\n---- Install python packages/requirements ----"
-sudo -H pip3 install -r requirements.txt
+sudo apt-get install git python3-cffi build-essential python3-virtualenv wget python3-dev python3-venv python3-wheel libxslt-dev libzip-dev libldap2-dev libsasl2-dev python3-setuptools node-less libpng-dev libjpeg-dev gdebi -y
 
 echo -e "\n---- Installing nodeJS NPM and rtlcss for LTR support ----"
 sudo apt-get install nodejs npm -y
@@ -149,6 +146,13 @@ sudo chown $OE_USER:$OE_USER /var/log/$OE_USER
 #--------------------------------------------------
 echo -e "\n==== Installing ODOO Server ===="
 sudo rsync -av --exclude 'install.sh' --exclude '.git' --exclude '.github' . $OE_HOME_EXT/
+
+echo -e "\n---- Creating virtual env ----"
+sudo -H virtualenv $OE_HOME_EXT/venv
+sudo -H source $OE_HOME_EXT/venv/bin/activate
+
+echo -e "\n---- Install python packages/requirements ----"
+sudo -H python3 -m pip install -r requirements.txt
 
 echo -e "\n---- Create custom module directory ----"
 sudo su $OE_USER -c "mkdir $OE_HOME/custom"
@@ -205,7 +209,7 @@ cat <<EOF > ~/$OE_CONFIG
 # Short-Description: Enterprise Business Applications
 # Description: ODOO Business Applications
 ### END INIT INFO
-PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin:\$OE_OE_HOME_EXT/venv/bin
 DAEMON=$OE_HOME_EXT/odoo-bin
 NAME=$OE_CONFIG
 DESC=$OE_CONFIG
