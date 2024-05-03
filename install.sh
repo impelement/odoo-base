@@ -45,6 +45,11 @@ LONGPOLLING_PORT="8072"
 ENABLE_SSL="False"
 # Provide Email to register ssl certificate
 ADMIN_EMAIL="admin@impelement.com"
+
+DEFAULT_DB="odoo"
+DEFAULT_MODULE="sale_management,account,crm,website,stock,contacts,im_livechat,calendar,hr,purchase"
+
+
 ##
 ###  WKHTMLTOPDF download links
 ## === Ubuntu Trusty x64 & x32 === (for other distributions please replace these two links,
@@ -166,14 +171,20 @@ sudo su root -c "printf 'admin_passwd = ${OE_SUPERADMIN}\n' >> /etc/${OE_CONFIG}
 sudo su root -c "printf 'http_port = ${OE_PORT}\n' >> /etc/${OE_CONFIG}.conf"
 sudo su root -c "printf 'logfile = /var/log/${OE_USER}/${OE_CONFIG}.log\n' >> /etc/${OE_CONFIG}.conf"
 sudo su root -c "printf 'addons_path=${OE_HOME_EXT}/addons,${OE_HOME}/custom/addons\n' >> /etc/${OE_CONFIG}.conf"
+sudo su root -c "printf 'list_db = False\n' >> /etc/${OE_CONFIG}.conf"
+sudo su root -c "printf '#dbfilter = ^%d$\n' >> /etc/${OE_CONFIG}.conf"
+sudo su root -c "printf 'db_name = odoo\n' >> /etc/${OE_CONFIG}.conf"
 
 sudo chown $OE_USER:$OE_USER /etc/${OE_CONFIG}.conf
 sudo chmod 640 /etc/${OE_CONFIG}.conf
 
 echo -e "* Create startup file"
 sudo su root -c "echo '#!/bin/sh' > $OE_HOME_EXT/start.sh"
-sudo su root -c "echo 'sudo -u $OE_USER $OE_HOME_EXT/odoo-bin --config=/etc/${OE_CONFIG}.conf' >> $OE_HOME_EXT/start.sh"
+sudo su root -c "echo 'sudo -u $OE_USER ${OE_HOME_EXT}/venv/bin/python3 $OE_HOME_EXT/odoo-bin --config=/etc/${OE_CONFIG}.conf -d ${DEFAULT_DB} -i ${DEFAULT_MODULE}' --stop-after-init >> $OE_HOME_EXT/start.sh"
 sudo chmod 755 $OE_HOME_EXT/start.sh
+
+echo -e "* Creating default database"
+sudo sh start.sh
 
 #--------------------------------------------------
 # Adding ODOO as a deamon (initscript)
