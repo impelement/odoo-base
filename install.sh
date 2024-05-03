@@ -67,7 +67,7 @@ fi
 #--------------------------------------------------
 echo -e "\n---- Update Server ----"
 # universe package is for Ubuntu 18.x
-sudo add-apt-repository universe
+sudo add-apt-repository universe -y
 # libpng12-0 dependency for wkhtmltopdf for older Ubuntu versions
 sudo add-apt-repository "deb http://mirrors.kernel.org/ubuntu/ xenial main"
 sudo apt-get update
@@ -141,10 +141,10 @@ sudo rsync -av --exclude 'install.sh' --exclude '.git' --exclude '.github' . $OE
 
 echo -e "\n---- Creating virtual env ----"
 sudo -H virtualenv $OE_HOME_EXT/venv
-sudo -H source $OE_HOME_EXT/venv/bin/activate
+source $OE_HOME_EXT/venv/bin/activate
 
 echo -e "\n---- Install python packages/requirements ----"
-sudo -H python3 -m pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 
 echo -e "\n---- Create custom module directory ----"
 sudo su $OE_USER -c "mkdir $OE_HOME/custom"
