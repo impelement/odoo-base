@@ -78,16 +78,8 @@ sudo apt-get install libpq-dev
 # Install PostgreSQL Server
 #--------------------------------------------------
 echo -e "\n---- Install PostgreSQL Server ----"
-if [ $INSTALL_POSTGRESQL_FOURTEEN = "True" ]; then
-    echo -e "\n---- Installing postgreSQL V14 due to the user it's choise ----"
-    sudo curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc|sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
-    sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-    sudo apt-get update
-    sudo apt-get install postgresql-14
-else
-    echo -e "\n---- Installing the default postgreSQL version based on Linux version ----"
-    sudo apt-get install postgresql postgresql-server-dev-all -y
-fi
+echo -e "\n---- Installing the default postgreSQL version based on Linux version ----"
+sudo apt-get install postgresql postgresql-server-dev-all -y
 
 
 echo -e "\n---- Creating the ODOO PostgreSQL User  ----"
@@ -171,18 +163,10 @@ if [ $GENERATE_RANDOM_PASSWORD = "True" ]; then
     OE_SUPERADMIN=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1)
 fi
 sudo su root -c "printf 'admin_passwd = ${OE_SUPERADMIN}\n' >> /etc/${OE_CONFIG}.conf"
-if [ $OE_VERSION > "11.0" ];then
-    sudo su root -c "printf 'http_port = ${OE_PORT}\n' >> /etc/${OE_CONFIG}.conf"
-else
-    sudo su root -c "printf 'xmlrpc_port = ${OE_PORT}\n' >> /etc/${OE_CONFIG}.conf"
-fi
+sudo su root -c "printf 'http_port = ${OE_PORT}\n' >> /etc/${OE_CONFIG}.conf"
 sudo su root -c "printf 'logfile = /var/log/${OE_USER}/${OE_CONFIG}.log\n' >> /etc/${OE_CONFIG}.conf"
+sudo su root -c "printf 'addons_path=${OE_HOME_EXT}/addons,${OE_HOME}/custom/addons\n' >> /etc/${OE_CONFIG}.conf"
 
-if [ $IS_ENTERPRISE = "True" ]; then
-    sudo su root -c "printf 'addons_path=${OE_HOME}/enterprise/addons,${OE_HOME_EXT}/addons\n' >> /etc/${OE_CONFIG}.conf"
-else
-    sudo su root -c "printf 'addons_path=${OE_HOME_EXT}/addons,${OE_HOME}/custom/addons\n' >> /etc/${OE_CONFIG}.conf"
-fi
 sudo chown $OE_USER:$OE_USER /etc/${OE_CONFIG}.conf
 sudo chmod 640 /etc/${OE_CONFIG}.conf
 
@@ -209,7 +193,7 @@ cat <<EOF > ~/$OE_CONFIG
 # Short-Description: Enterprise Business Applications
 # Description: ODOO Business Applications
 ### END INIT INFO
-PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin:\$OE_OE_HOME_EXT/venv/bin
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin:\$OE_HOME_EXT/venv/bin
 DAEMON=$OE_HOME_EXT/odoo-bin
 NAME=$OE_CONFIG
 DESC=$OE_CONFIG
