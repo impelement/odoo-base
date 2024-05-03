@@ -137,7 +137,7 @@ sudo chown $OE_USER:$OE_USER /var/log/$OE_USER
 # Install ODOO
 #--------------------------------------------------
 echo -e "\n==== Installing ODOO Server ===="
-sudo rsync -av --exclude 'install.sh' --exclude '.git' --exclude '.github' . $OE_HOME_EXT/
+sudo rsync -av --stats  --exclude 'install.sh' --exclude '.git' --exclude '.github' . $OE_HOME_EXT/
 
 echo -e "\n---- Creating virtual env ----"
 sudo -H virtualenv $OE_HOME_EXT/venv
