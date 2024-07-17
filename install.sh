@@ -24,11 +24,11 @@ INSTALL_WKHTMLTOPDF="True"
 OE_PORT="8069"
 # Choose the Odoo version which you want to install. For example: 16.0, 15.0, 14.0 or saas-22. When using 'master' the master version will be installed.
 # IMPORTANT! This script contains extra libraries that are specifically needed for Odoo 16.0
-OE_VERSION="16.0"
+OE_VERSION="17.0"
 # Set this to True if you want to install the Odoo enterprise version!
 IS_ENTERPRISE="False"
 # Installs postgreSQL V14 instead of defaults (e.g V12 for Ubuntu 20/22) - this improves performance
-INSTALL_POSTGRESQL_FOURTEEN="False"
+INSTALL_POSTGRESQL_FOURTEEN="True"
 # Set this to True if you want to install Nginx!
 INSTALL_NGINX="True"
 # Set the superadmin password - if GENERATE_RANDOM_PASSWORD is set to "True" we will automatically generate a random password, otherwise we use this one
@@ -38,7 +38,9 @@ GENERATE_RANDOM_PASSWORD="True"
 OE_CONFIG="${OE_USER}-server"
 OE_SERVICE="${OE_USER}.service"
 # Set the website name
-WEBSITE_NAME="odoo_logistics"
+WEBSITE_NAME="xcore"
+# Set the domain name
+DOMAIN_NAME="xcore"
 # Set the default Odoo longpolling port (you still have to use -c /etc/odoo-server.conf for example to use this.)
 LONGPOLLING_PORT="8072"
 # Set to "True" to install certbot and have ssl enabled, "False" to use http
@@ -46,7 +48,7 @@ ENABLE_SSL="False"
 # Provide Email to register ssl certificate
 ADMIN_EMAIL="admin@impelement.com"
 
-DEFAULT_DB="odoo"
+DEFAULT_DB="default_odoo"
 DEFAULT_MODULE="sale_management,account,crm,website,stock,contacts,im_livechat,calendar,hr,purchase"
 
 
@@ -118,7 +120,7 @@ if [ $INSTALL_WKHTMLTOPDF = "True" ]; then
 
   if [[ $(lsb_release -r -s) == "22.04" ]] || [[ $(lsb_release -r -s) == "23.04" ]]; then
     # Ubuntu 22.04 LTS
-    sudo apt install wkhtmltopdf -y
+    sudo apt install xfonts-75dpi wkhtmltopdf -y
   else
       # For older versions of Ubuntu
     sudo gdebi --n `basename $_url`
@@ -173,18 +175,10 @@ sudo su root -c "printf 'logfile = /var/log/${OE_USER}/${OE_CONFIG}.log\n' >> /e
 sudo su root -c "printf 'addons_path=${OE_HOME_EXT}/addons,${OE_HOME}/custom/addons\n' >> /etc/${OE_CONFIG}.conf"
 sudo su root -c "printf 'list_db = False\n' >> /etc/${OE_CONFIG}.conf"
 sudo su root -c "printf '#dbfilter = ^%d$\n' >> /etc/${OE_CONFIG}.conf"
-sudo su root -c "printf 'db_name = odoo\n' >> /etc/${OE_CONFIG}.conf"
+sudo su root -c "printf 'db_name = ${DEFAULT_DB}\n' >> /etc/${OE_CONFIG}.conf"
 
 sudo chown $OE_USER:$OE_USER /etc/${OE_CONFIG}.conf
 sudo chmod 640 /etc/${OE_CONFIG}.conf
-
-echo -e "* Create startup file"
-sudo su root -c "echo '#!/bin/sh' > $OE_HOME_EXT/start.sh"
-sudo su root -c "echo 'sudo -u $OE_USER ${OE_HOME_EXT}/venv/bin/python3 $OE_HOME_EXT/odoo-bin --config=/etc/${OE_CONFIG}.conf -d ${DEFAULT_DB} -i ${DEFAULT_MODULE}' --stop-after-init >> $OE_HOME_EXT/start.sh"
-sudo chmod 755 $OE_HOME_EXT/start.sh
-
-echo -e "* Creating default database"
-sudo sh start.sh
 
 #--------------------------------------------------
 # Adding ODOO as a deamon (initscript)
@@ -233,7 +227,7 @@ server {
   listen 80;
 
   # set proper server name after domain set
-  server_name $WEBSITE_NAME;
+  server_name $DOMAIN_NAME;
 
   # Add Headers for odoo proxy mode
   proxy_set_header X-Forwarded-Host \$host;
@@ -246,8 +240,8 @@ server {
   proxy_set_header HTTP_X_FORWARDED_HOST \$remote_addr;
 
   #   odoo    log files
-  access_log  /var/log/nginx/$OE_USER-access.log;
-  error_log       /var/log/nginx/$OE_USER-error.log;
+  access_log  /var/log/nginx/$DOMAIN_NAME-access.log;
+  error_log       /var/log/nginx/$DOMAIN_NAME-error.log;
 
   #   increase    proxy   buffer  size
   proxy_buffers   16  64k;
@@ -316,14 +310,13 @@ fi
 #--------------------------------------------------
 # Enable ssl with certbot
 #--------------------------------------------------
-
 if [ $INSTALL_NGINX = "True" ] && [ $ENABLE_SSL = "True" ] && [ $ADMIN_EMAIL != "odoo@example.com" ]  && [ $WEBSITE_NAME != "_" ];then
   sudo apt-get update -y
   sudo apt install snapd -y
   sudo snap install core; snap refresh core
   sudo snap install --classic certbot
   sudo apt-get install python3-certbot-nginx -y
-  sudo certbot --nginx -d $WEBSITE_NAME --noninteractive --agree-tos --email $ADMIN_EMAIL --redirect
+  sudo certbot --nginx -d $DOMAIN_NAME --noninteractive --agree-tos --email $ADMIN_EMAIL --redirect
   sudo service nginx reload
   echo "SSL/HTTPS is enabled!"
 else
@@ -336,6 +329,17 @@ else
   fi
 fi
 
+
+#--------------------------------------------------
+# Install database
+#--------------------------------------------------
+echo -e "* Creating default database"
+sudo -u $OE_USER ${OE_HOME_EXT}/venv/bin/python3 $OE_HOME_EXT/odoo-bin -d ${DEFAULT_DB} -i ${DEFAULT_MODULE} --stop-after-init
+
+
+#--------------------------------------------------
+# Start the real service
+#--------------------------------------------------
 echo -e "* Starting Odoo Service"
 sudo su root -c "/etc/init.d/$OE_CONFIG start"
 echo "-----------------------------------------------------------"
