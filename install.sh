@@ -38,9 +38,9 @@ GENERATE_RANDOM_PASSWORD="True"
 OE_CONFIG="${OE_USER}-server"
 OE_SERVICE="${OE_USER}.service"
 # Set the website name
-WEBSITE_NAME="xcore"
+WEBSITE_NAME="odoo"
 # Set the domain name
-DOMAIN_NAME="xcore"
+DOMAIN_NAME="odoo.impelement.com"
 # Set the default Odoo longpolling port (you still have to use -c /etc/odoo-server.conf for example to use this.)
 LONGPOLLING_PORT="8072"
 # Set to "True" to install certbot and have ssl enabled, "False" to use http
@@ -48,8 +48,10 @@ ENABLE_SSL="False"
 # Provide Email to register ssl certificate
 ADMIN_EMAIL="admin@impelement.com"
 
-DEFAULT_DB="default_odoo"
-DEFAULT_MODULE="sale_management,account,crm,website,stock,contacts,im_livechat,calendar,hr,purchase"
+DEFAULT_DB="odoo"
+DEFAULT_MODULE="sale_management,account,crm,stock,contacts,calendar,purchase,om_account_accountant"
+UI_MODULE="muk_web_theme,web_theme_classic,os_pwa_backend,web_responsive,web_window_title,web_remember_tree_column_width,web_favicon,web_tree_many2one_clickable"
+PLUGIN_MODULE="base_user_role"
 
 
 ##
@@ -80,7 +82,7 @@ sudo add-apt-repository universe -y
 sudo add-apt-repository "deb http://mirrors.kernel.org/ubuntu/ xenial main"
 sudo apt-get update
 sudo apt-get upgrade -y
-sudo apt-get install libpq-dev
+sudo apt-get install libpq-dev -y
 
 #--------------------------------------------------
 # Install PostgreSQL Server
@@ -92,12 +94,13 @@ sudo apt-get install postgresql postgresql-server-dev-all -y
 
 echo -e "\n---- Creating the ODOO PostgreSQL User  ----"
 sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
+sudo su odoo -c createdb xcore
 
 #--------------------------------------------------
 # Install Dependencies
 #--------------------------------------------------
 echo -e "\n--- Installing Python 3 + pip3 --"
-sudo apt-get install python3 python3-pip
+sudo apt-get install python3 python3-pip -y
 sudo apt-get install git python3-cffi build-essential python3-virtualenv wget python3-dev python3-venv python3-wheel libxslt-dev libzip-dev libldap2-dev libsasl2-dev python3-setuptools node-less libpng-dev libjpeg-dev gdebi -y
 
 echo -e "\n---- Installing nodeJS NPM and rtlcss for LTR support ----"
@@ -109,20 +112,21 @@ sudo npm install -g rtlcss
 #--------------------------------------------------
 if [ $INSTALL_WKHTMLTOPDF = "True" ]; then
   echo -e "\n---- Install wkhtml and place shortcuts on correct place for ODOO 13 ----"
-  #pick up correct one from x64 & x32 versions:
-  if [ "`getconf LONG_BIT`" == "64" ];then
-      _url=$WKHTMLTOX_X64
-  else
-      _url=$WKHTMLTOX_X32
-  fi
-  sudo wget $_url
 
 
   if [[ $(lsb_release -r -s) == "22.04" ]] || [[ $(lsb_release -r -s) == "23.04" ]]; then
     # Ubuntu 22.04 LTS
     sudo apt install xfonts-75dpi wkhtmltopdf -y
   else
-      # For older versions of Ubuntu
+    #pick up correct one from x64 & x32 versions:
+    if [ "`getconf LONG_BIT`" == "64" ];then
+        _url=$WKHTMLTOX_X64
+    else
+        _url=$WKHTMLTOX_X32
+    fi
+
+    # For older versions of Ubuntu
+    sudo wget $_url
     sudo gdebi --n `basename $_url`
   fi
 
@@ -172,7 +176,7 @@ fi
 sudo su root -c "printf 'admin_passwd = ${OE_SUPERADMIN}\n' >> /etc/${OE_CONFIG}.conf"
 sudo su root -c "printf 'http_port = ${OE_PORT}\n' >> /etc/${OE_CONFIG}.conf"
 sudo su root -c "printf 'logfile = /var/log/${OE_USER}/${OE_CONFIG}.log\n' >> /etc/${OE_CONFIG}.conf"
-sudo su root -c "printf 'addons_path=${OE_HOME_EXT}/addons,${OE_HOME}/custom/addons\n' >> /etc/${OE_CONFIG}.conf"
+sudo su root -c "printf 'addons_path=${OE_HOME_EXT}/addons,${OE_HOME}/custom\n' >> /etc/${OE_CONFIG}.conf"
 sudo su root -c "printf 'list_db = False\n' >> /etc/${OE_CONFIG}.conf"
 sudo su root -c "printf '#dbfilter = ^%d$\n' >> /etc/${OE_CONFIG}.conf"
 sudo su root -c "printf 'db_name = ${DEFAULT_DB}\n' >> /etc/${OE_CONFIG}.conf"
@@ -334,8 +338,7 @@ fi
 # Install database
 #--------------------------------------------------
 echo -e "* Creating default database"
-sudo -u $OE_USER ${OE_HOME_EXT}/venv/bin/python3 $OE_HOME_EXT/odoo-bin -d ${DEFAULT_DB} -i ${DEFAULT_MODULE} --stop-after-init
-
+sudo -u $OE_USER ${OE_HOME_EXT}/venv/bin/python3 $OE_HOME_EXT/odoo-bin -d ${DEFAULT_DB} -i ${DEFAULT_MODULE} --stop-after-init --without-demo=True
 
 #--------------------------------------------------
 # Start the real service

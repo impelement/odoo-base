@@ -30,3 +30,6 @@ For a standard installation please follow the <a href="https://www.odoo.com/docu
 from the documentation.
 
 To learn the software, we recommend the <a href="https://www.odoo.com/slides">Odoo eLearning</a>, or <a href="https://www.odoo.com/page/scale-up-business-game">Scale-up</a>, the <a href="https://www.odoo.com/page/scale-up-business-game">business game</a>. Developers can start with <a href="https://www.odoo.com/documentation/17.0/developer/howtos.html">the developer tutorials</a>
+
+
+python3 odoo-bin --db_user appuser --db_pass password --db_host 127.0.0.1 --addons-path addons/,../customs -d odoo_tmp_1 -i sale_management,account,crm,website,stock,contacts,im_livechat,calendar,hr,purchase,muk_web_theme,web_theme_classic,os_pwa_backend,web_responsive --without-demo = True
