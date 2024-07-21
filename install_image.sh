@@ -27,7 +27,7 @@ PLUGIN_MODULE="base_user_role"
 #<UDF name="enable_logistics" label="Download and setup logictics modules" default="False">
 DOMAIN="odoo.impelement.com"
 GITHUB_USER="ajamini"
-GITHUB_TOKEN="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"
+GITHUB_TOKEN="<REDACT>"
 ENABLE_LOGICTICS="True"
 
 #--------------------------------------------------
