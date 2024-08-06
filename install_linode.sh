@@ -16,7 +16,7 @@ ADMIN_EMAIL="admin@impelement.com"
 OE_VERSION="17.0"
 DEFAULT_DB="odoo"
 
-DEFAULT_MODULE="sale_management,account,crm,stock,contacts,calendar,purchase,om_account_accountant"
+DEFAULT_MODULE="sale_management,account,crm,stock,contacts,calendar,purchase"
 UI_MODULE="muk_web_theme,web_theme_classic,os_pwa_backend,web_responsive,web_window_title,web_remember_tree_column_width,web_favicon,web_tree_many2one_clickable"
 PLUGIN_MODULE="base_user_role"
 
@@ -28,7 +28,7 @@ PLUGIN_MODULE="base_user_role"
 DOMAIN="odoo.impelement.com"
 GITHUB_USER="ajamini"
 GITHUB_TOKEN="<REDACT>"
-ENABLE_LOGICTICS="True"
+ENABLE_LOGISTICS="True"
 
 #--------------------------------------------------
 # Update Server
@@ -66,7 +66,13 @@ sudo npm install -g rtlcss
 #--------------------------------------------------
 # Install Wkhtmltopdf if needed
 #--------------------------------------------------
-sudo apt install xfonts-75dpi wkhtmltopdf -y
+#sudo apt install xfonts-75dpi wkhtmltopdf -y
+sudo wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_amd64.deb
+sudo dpkg -i wkhtmltox_0.12.6.1-2.jammy_amd64.deb
+sudo cp /usr/local/bin/wkhtmltopdf /usr/bin/
+sudo cp /usr/local/bin/wkhtmltoimage /usr/bin/
+
+
 
 #--------------------------------------------------
 # Install ODOO
@@ -93,9 +99,9 @@ echo -e "\n---- Create custom module directory ----"
 sudo su $OE_USER -c "mkdir -p $OE_HOME/custom"
 
 CUSTOM_ADDONS=""
-if [ $ENABLE_LOGICTICS = "True" ]; then
-  sudo git clone https://$GITHUB_USER:$GITHUB_TOKEN@github.com/impelement/odoo-logictics.git $OE_HOME/custom/logistics
-  CUSTOM_ADDONS = ",$OE_HOME/custom/logistic}"
+if [ $ENABLE_LOGISTICS = "True" ]; then
+  sudo git clone https://$GITHUB_USER:$GITHUB_TOKEN@github.com/impelement/odoo-logistics.git $OE_HOME/custom/logistics
+  CUSTOM_ADDONS=",$OE_HOME/custom/logistic"
 fi
 
 
